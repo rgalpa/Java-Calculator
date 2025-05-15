@@ -1,0 +1,118 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.text.DecimalFormat;
+
+public class Calculator extends JFrame implements ActionListener {
+    private JTextField display;
+    private JLabel expressionLabel;
+    private StringBuilder currentInput;
+    private double firstOperand = 0;
+    private String operator = "";
+    private boolean isOperatorClicked = false;
+
+    public Calculator() {
+        setTitle("Calculator");
+        setSize(400, 500);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        JPanel displayPanel = new JPanel();
+        displayPanel.setLayout(new BorderLayout());
+
+        expressionLabel = new JLabel(" ");
+        expressionLabel.setFont(new Font("Arial", Font.PLAIN, 18));
+        expressionLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+
+        display = new JTextField("0");
+        display.setFont(new Font("Arial", Font.BOLD, 36));
+        display.setHorizontalAlignment(SwingConstants.RIGHT);
+        display.setEditable(false);
+
+        displayPanel.add(expressionLabel, BorderLayout.NORTH);
+        displayPanel.add(display, BorderLayout.SOUTH);
+        add(displayPanel, BorderLayout.NORTH);
+
+        currentInput = new StringBuilder();
+
+        String[] buttonLabels = {
+            "C", "<", "%", "/",
+            "7", "8", "9", "*",
+            "4", "5", "6", "-",
+            "1", "2", "3", "+",
+            "0", ".", "=", 
+        };
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new GridLayout(5, 4, 10, 10));
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        for (String label : buttonLabels) {
+            JButton btn = new JButton(label);
+            btn.setFont(new Font("Arial", Font.PLAIN, 24));
+            btn.addActionListener(this);
+            buttonPanel.add(btn);
+        }
+
+        add(buttonPanel, BorderLayout.CENTER);
+        setVisible(true);
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        String input = e.getActionCommand();
+
+        if (input.matches("[0-9]")) {
+            if (isOperatorClicked || display.getText().equals("0")) {
+                currentInput.setLength(0);
+            }
+            isOperatorClicked = false;
+            currentInput.append(input);
+            display.setText(currentInput.toString());
+        } else if (input.equals(".")) {
+            if (!currentInput.toString().contains(".")) {
+                currentInput.append(".");
+                display.setText(currentInput.toString());
+            }
+        } else if (input.equals("C")) {
+            currentInput.setLength(0);
+            firstOperand = 0;
+            operator = "";
+            display.setText("0");
+            expressionLabel.setText(" ");
+        } else if (input.equals("<")) {
+            if (currentInput.length() > 0) {
+                currentInput.deleteCharAt(currentInput.length() - 1);
+                display.setText(currentInput.length() > 0 ? currentInput.toString() : "0");
+            }
+        } else if (input.equals("=")) {
+            double secondOperand = Double.parseDouble(display.getText());
+            double result = calculate(firstOperand, secondOperand, operator);
+            DecimalFormat formatter = new DecimalFormat("#.########");
+            expressionLabel.setText(firstOperand + " " + operator + " " + secondOperand + " =");
+            display.setText(formatter.format(result));
+            currentInput.setLength(0);
+            currentInput.append(result);
+            isOperatorClicked = true;
+        } else if (input.matches("[+\\-*/%]")) {
+            firstOperand = Double.parseDouble(display.getText());
+            operator = input;
+            isOperatorClicked = true;
+            expressionLabel.setText(display.getText() + " " + operator);
+        }
+    }
+
+    private double calculate(double a, double b, String op) {
+        switch (op) {
+            case "+": return a + b;
+            case "-": return a - b;
+            case "*": return a * b;
+            case "/": return b != 0 ? a / b : 0;
+            case "%": return a % b;
+            default: return b;
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new Calculator());
+    }
+}
